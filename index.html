@@ -118,18 +118,22 @@
             margin-top: 8px;
         }
         
-        /* ========== ОСНОВНАЯ ВЁРСТКА ЧАТА (ПРОСТАЯ И НАДЁЖНАЯ) ========== */
-        .chat-layout {
+        /* ========== ОСНОВНАЯ ВЁРСТКА ========== */
+        .main-layout {
             display: flex;
             height: 100%;
             width: 100%;
+            overflow: hidden;
         }
+        
+        /* БОКОВАЯ ПАНЕЛЬ (диалоги) */
         .dialogs-panel {
             width: 320px;
             background: #17212b;
             border-right: 1px solid #2b3b4c;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
             transition: transform 0.3s ease;
         }
         .user-header {
@@ -139,11 +143,11 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #2b3b4c;
+            flex-shrink: 0;
         }
         .user-header span {
             font-weight: 600;
             color: white;
-            font-size: 16px;
         }
         .icon-btn {
             background: none;
@@ -154,14 +158,11 @@
             padding: 4px 8px;
             border-radius: 8px;
         }
-        .icon-btn:hover {
-            background: #2b3b4c;
-        }
         .search-box {
             padding: 12px 16px;
             background: #1f2c38;
             border-bottom: 1px solid #2b3b4c;
-            position: relative;
+            flex-shrink: 0;
         }
         .search-box input {
             width: 100%;
@@ -171,32 +172,6 @@
             border-radius: 20px;
             color: white;
             outline: none;
-        }
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 16px;
-            right: 16px;
-            background: #1f2c38;
-            border-radius: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-        }
-        .search-results.show {
-            display: block;
-        }
-        .search-result-item {
-            padding: 10px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid #2b3b4c;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .search-result-item:hover {
-            background: #2b3b4c;
         }
         .dialogs-list {
             flex: 1;
@@ -224,6 +199,7 @@
             font-weight: bold;
             color: white;
             position: relative;
+            flex-shrink: 0;
         }
         .online-dot {
             width: 12px;
@@ -240,13 +216,12 @@
             color: #eef4ff;
         }
         
-        /* ========== ЧАТ — ТОЧНО РАБОТАЕТ ========== */
+        /* ЧАТ — поле ввода ПРИБИТО К НИЗУ */
         .chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #0e1621;
-            height: 100%;
             overflow: hidden;
         }
         .chat-header {
@@ -342,6 +317,7 @@
             padding: 40px;
         }
         
+        /* Адаптив для телефона */
         @media (max-width: 768px) {
             .dialogs-panel {
                 position: absolute;
@@ -546,12 +522,15 @@ async function sendMessage() {
 
 async function initChat() {
     document.getElementById('chatContainer').innerHTML = `
-        <div class="chat-layout">
+        <div class="main-layout">
             <div class="dialogs-panel" id="dialogsPanel">
-                <div class="user-header"><span><i class="fas fa-user-circle"></i> <span id="myUserName"></span></span><div><button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button></div></div>
+                <div class="user-header">
+                    <span><i class="fas fa-user-circle"></i> <span id="myUserName"></span></span>
+                    <button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="🔍 Поиск по имени или @username...">
-                    <div id="searchResults" class="search-results"></div>
+                    <input type="text" id="searchInput" placeholder="🔍 Поиск...">
+                    <div id="searchResults" class="search-results" style="background:#1f2c38; border-radius:12px; margin-top:8px; display:none;"></div>
                 </div>
                 <div class="dialogs-list" id="usersList"></div>
             </div>
@@ -578,13 +557,14 @@ async function initChat() {
     document.getElementById('backBtn').addEventListener('click', goBackToDialogs);
     
     const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
     let searchTimeout;
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => searchUsers(searchInput.value), 300);
     });
     document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target)) document.getElementById('searchResults').classList.remove('show');
+        if (!searchInput.contains(e.target)) searchResults.classList.remove('show');
     });
     
     await loadDialogs();
