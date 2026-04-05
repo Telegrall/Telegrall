@@ -22,7 +22,7 @@
         }
         .app {
             width: 100%;
-            max-width: 1400px;
+            max-width: 800px;
             height: 100vh;
             background: #17212b;
             display: flex;
@@ -118,138 +118,25 @@
             margin-top: 8px;
         }
         
-        /* ========== ОСНОВНАЯ ВЁРСТКА ========== */
-        .main-layout {
-            display: flex;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-        }
-        
-        /* БОКОВАЯ ПАНЕЛЬ (диалоги) */
-        .dialogs-panel {
-            width: 320px;
-            background: #17212b;
-            border-right: 1px solid #2b3b4c;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        .user-header {
-            padding: 16px 20px;
-            background: #1f2c38;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #2b3b4c;
-            flex-shrink: 0;
-        }
-        .user-header span {
-            font-weight: 600;
-            color: white;
-        }
-        .icon-btn {
-            background: none;
-            border: none;
-            color: #9aaebf;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 8px;
-        }
-        .search-box {
-            padding: 12px 16px;
-            background: #1f2c38;
-            border-bottom: 1px solid #2b3b4c;
-            flex-shrink: 0;
-        }
-        .search-box input {
-            width: 100%;
-            background: #17212b;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 20px;
-            color: white;
-            outline: none;
-        }
-        .dialogs-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-        .dialog-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            cursor: pointer;
-            border-bottom: 1px solid #1e2a32;
-        }
-        .dialog-item:hover {
-            background: #1f2c38;
-        }
-        .avatar {
-            width: 48px;
-            height: 48px;
-            background: #2b9aff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            position: relative;
-            flex-shrink: 0;
-        }
-        .online-dot {
-            width: 12px;
-            height: 12px;
-            background: #4bcb6e;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            border: 2px solid #17212b;
-        }
-        .dialog-name {
-            font-weight: 600;
-            color: #eef4ff;
-        }
-        
-        /* ЧАТ — поле ввода ПРИБИТО К НИЗУ */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #0e1621;
-            overflow: hidden;
-        }
+        /* ========== ЧАТ (КАК В ТЕСТОВОМ ПРИМЕРЕ) ========== */
         .chat-header {
             padding: 12px 20px;
             background: #1f2c38;
             border-bottom: 1px solid #2b3b4c;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
         }
-        .chat-header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .chat-header h3 {
+            color: white;
         }
-        .back-btn {
-            background: none;
+        .select-user-btn {
+            background: #2b9aff;
             border: none;
-            font-size: 1.5rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
             cursor: pointer;
-            color: #2b9aff;
-            display: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            align-items: center;
-            justify-content: center;
         }
         .messages-container {
             flex: 1;
@@ -290,7 +177,6 @@
             display: flex;
             gap: 12px;
             border-top: 1px solid #2b3b4c;
-            flex-shrink: 0;
         }
         .message-input {
             flex: 1;
@@ -317,57 +203,61 @@
             padding: 40px;
         }
         
-        /* Адаптив для телефона */
-        @media (max-width: 768px) {
-            .dialogs-panel {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 10;
-                transform: translateX(0);
-            }
-            .dialogs-panel.hide-on-mobile {
-                transform: translateX(-100%);
-            }
-            .chat-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 20;
-                transform: translateX(100%);
-            }
-            .chat-area.show-on-mobile {
-                transform: translateX(0);
-            }
-            .back-btn {
-                display: flex;
-            }
-            .message {
-                max-width: 85%;
-            }
-            .avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
-            }
+        /* Модальное окно выбора пользователя */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
-        
-        @media (min-width: 769px) {
-            .dialogs-panel {
-                position: relative;
-                transform: translateX(0) !important;
-            }
-            .chat-area {
-                position: relative;
-                transform: translateX(0) !important;
-            }
-            .back-btn {
-                display: none !important;
-            }
+        .modal-content {
+            background: #17212b;
+            border-radius: 28px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-content h3 {
+            color: white;
+            margin-bottom: 16px;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 20px;
+            border: none;
+            margin-bottom: 16px;
+            background: #1f2c38;
+            color: white;
+        }
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .user-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #2b3b4c;
+            color: white;
+        }
+        .user-item:hover {
+            background: #1f2c38;
+        }
+        .close-modal {
+            background: #2b9aff;
+            border: none;
+            padding: 8px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
         }
     </style>
 </head>
@@ -396,6 +286,15 @@
     <div id="chatContainer" style="display:none"></div>
 </div>
 
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <h3>Выберите собеседника</h3>
+        <input type="text" id="searchUserInput" placeholder="🔍 Поиск...">
+        <div id="userList" class="user-list"></div>
+        <button class="close-modal" id="closeModalBtn">Закрыть</button>
+    </div>
+</div>
+
 <script>
 const SB_URL = "https://iiuahjmpszfcgtwapidt.supabase.co";
 const SB_KEY = "sb_publishable_iFYpqkv4D0qEOj4Dn1X9Nw_OH9d5Bji";
@@ -404,7 +303,6 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null;
 let currentChatId = null;
 let allUsers = [];
-let dialogsUsers = [];
 
 function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function formatTime(d) { return new Date(d).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'}); }
@@ -422,83 +320,35 @@ async function loadCurrentUser() {
     return true;
 }
 
-async function loadDialogs() {
-    const { data: messages } = await sb.from('messages').select('sender_id, receiver_id').or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
-    const userIds = new Set();
-    messages?.forEach(m => {
-        if (m.sender_id === currentUser.id) userIds.add(m.receiver_id);
-        if (m.receiver_id === currentUser.id) userIds.add(m.sender_id);
-    });
-    if (userIds.size === 0) {
-        dialogsUsers = [];
-        const div = document.getElementById('usersList');
-        if (div) div.innerHTML = '<div class="empty-chat">💬 У вас пока нет чатов. Начните общение через поиск</div>';
-        return;
-    }
-    const { data: users } = await sb.from('profiles').select('*').in('id', Array.from(userIds));
-    dialogsUsers = users || [];
-    renderDialogsList();
+async function loadUsers() {
+    const { data } = await sb.from('profiles').select('*').neq('id', currentUser.id);
+    allUsers = data || [];
+    renderUserList(allUsers);
 }
 
-function renderDialogsList() {
-    const div = document.getElementById('usersList');
-    if (!div) return;
-    if (dialogsUsers.length === 0) {
-        div.innerHTML = '<div class="empty-chat">💬 У вас пока нет чатов. Начните общение через поиск</div>';
+function renderUserList(users) {
+    const container = document.getElementById('userList');
+    if (!users.length) {
+        container.innerHTML = '<div class="user-item">Нет пользователей</div>';
         return;
     }
-    div.innerHTML = dialogsUsers.map(u => `<div class="dialog-item" data-id="${u.id}"><div class="avatar">${(u.display_name||u.username)[0]}<span class="online-dot"></span></div><div class="dialog-name">${escapeHtml(u.display_name||u.username)}</div></div>`).join('');
-    document.querySelectorAll('.dialog-item').forEach(el => { el.onclick = () => openUserChat(el.dataset.id); });
-}
-
-async function searchUsers(query) {
-    if (!query.trim()) {
-        document.getElementById('searchResults').classList.remove('show');
-        return;
-    }
-    const { data } = await sb.from('profiles')
-        .select('*')
-        .neq('id', currentUser.id)
-        .or(`display_name.ilike.%${query}%,username.ilike.%${query}%`);
-    const resultsDiv = document.getElementById('searchResults');
-    if (!data || data.length === 0) {
-        resultsDiv.innerHTML = '<div class="search-result-item">Ничего не найдено</div>';
-        resultsDiv.classList.add('show');
-        return;
-    }
-    resultsDiv.innerHTML = data.map(u => `<div class="search-result-item" data-id="${u.id}"><div class="avatar" style="width:32px;height:32px;font-size:0.8rem">${(u.display_name||u.username)[0]}</div><div>${escapeHtml(u.display_name||u.username)}<br><span style="font-size:11px;color:#8e9eae">@${escapeHtml(u.username)}</span></div></div>`).join('');
-    resultsDiv.classList.add('show');
-    document.querySelectorAll('.search-result-item[data-id]').forEach(el => {
-        el.onclick = () => {
-            const userId = el.dataset.id;
-            const user = data.find(u => u.id === userId);
-            openUserChat(userId, true);
-            document.getElementById('searchInput').value = '';
-            resultsDiv.classList.remove('show');
-        };
+    container.innerHTML = users.map(u => `
+        <div class="user-item" data-id="${u.id}">
+            ${escapeHtml(u.display_name || u.username)}
+        </div>
+    `).join('');
+    document.querySelectorAll('.user-item[data-id]').forEach(el => {
+        el.onclick = () => selectUser(el.dataset.id);
     });
 }
 
-async function openUserChat(id, isNew = false) {
-    currentChatId = id;
-    const user = dialogsUsers.find(u => u.id === id) || allUsers.find(u => u.id === id);
+function selectUser(userId) {
+    currentChatId = userId;
+    const user = allUsers.find(u => u.id === userId);
     document.getElementById('chatUserName').innerText = user?.display_name || user?.username;
-    document.getElementById('chatAvatar').innerText = (user?.display_name||user?.username)[0];
+    document.getElementById('userModal').style.display = 'none';
     document.getElementById('inputArea').style.display = 'flex';
-    await loadMessages();
-    if (window.innerWidth <= 768) {
-        document.getElementById('dialogsPanel').classList.add('hide-on-mobile');
-        document.getElementById('chatAreaPanel').classList.add('show-on-mobile');
-    }
-    if (isNew) await loadDialogs();
-}
-
-function goBackToDialogs() {
-    if (window.innerWidth <= 768) {
-        document.getElementById('dialogsPanel').classList.remove('hide-on-mobile');
-        document.getElementById('chatAreaPanel').classList.remove('show-on-mobile');
-    }
-    currentChatId = null;
+    loadMessages();
 }
 
 async function loadMessages() {
@@ -517,57 +367,38 @@ async function sendMessage() {
     await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: currentChatId, content: text });
     input.value = '';
     await loadMessages();
-    await loadDialogs();
 }
 
 async function initChat() {
     document.getElementById('chatContainer').innerHTML = `
-        <div class="main-layout">
-            <div class="dialogs-panel" id="dialogsPanel">
-                <div class="user-header">
-                    <span><i class="fas fa-user-circle"></i> <span id="myUserName"></span></span>
-                    <button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
-                </div>
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="🔍 Поиск...">
-                    <div id="searchResults" class="search-results" style="background:#1f2c38; border-radius:12px; margin-top:8px; display:none;"></div>
-                </div>
-                <div class="dialogs-list" id="usersList"></div>
-            </div>
-            <div class="chat-area" id="chatAreaPanel">
-                <div class="chat-header">
-                    <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
-                    <div class="chat-header-left">
-                        <div class="avatar" id="chatAvatar">?</div>
-                        <h3 id="chatUserName"></h3>
-                    </div>
-                </div>
-                <div class="messages-container" id="messagesContainer"><div class="empty-chat">Выберите чат</div></div>
-                <div class="input-area" id="inputArea" style="display:none">
-                    <input type="text" class="message-input" id="messageInput" placeholder="Сообщение...">
-                    <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
-                </div>
-            </div>
+        <div class="chat-header">
+            <h3 id="chatUserName">Чат</h3>
+            <button class="select-user-btn" id="selectUserBtn">✉️ Новый чат</button>
+        </div>
+        <div class="messages-container" id="messagesContainer">
+            <div class="empty-chat">Выберите собеседника</div>
+        </div>
+        <div class="input-area" id="inputArea" style="display:none">
+            <input type="text" class="message-input" id="messageInput" placeholder="Сообщение...">
+            <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
         </div>
     `;
-    document.getElementById('myUserName').innerText = currentUser.display_name || currentUser.username;
-    document.getElementById('logoutBtn').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+    document.getElementById('selectUserBtn').onclick = () => {
+        loadUsers();
+        document.getElementById('userModal').style.display = 'flex';
+    };
     document.getElementById('sendBtn').onclick = sendMessage;
     document.getElementById('messageInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-    document.getElementById('backBtn').addEventListener('click', goBackToDialogs);
+    document.getElementById('closeModalBtn').onclick = () => document.getElementById('userModal').style.display = 'none';
     
-    const searchInput = document.getElementById('searchInput');
-    const searchResults = document.getElementById('searchResults');
-    let searchTimeout;
+    const searchInput = document.getElementById('searchUserInput');
     searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => searchUsers(searchInput.value), 300);
-    });
-    document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target)) searchResults.classList.remove('show');
+        const query = searchInput.value.toLowerCase();
+        const filtered = allUsers.filter(u => (u.display_name || u.username).toLowerCase().includes(query));
+        renderUserList(filtered);
     });
     
-    await loadDialogs();
+    await loadUsers();
 }
 
 async function register(email, pwd, user, name) {
