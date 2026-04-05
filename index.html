@@ -31,7 +31,7 @@
             position: relative;
         }
         
-        /* Аутентификация */
+        /* Аутентификация (без изменений) */
         .auth-wrapper {
             flex: 1;
             display: flex;
@@ -123,7 +123,7 @@
             margin-top: 8px;
         }
         
-        /* Чат */
+        /* Чат — исправленная вёрстка с фиксированным полем ввода */
         .chat-layout {
             display: flex;
             height: 100%;
@@ -256,13 +256,15 @@
             font-size: 15px;
         }
         
-        /* ИСПРАВЛЕННАЯ ОБЛАСТЬ ЧАТА — поле ввода НЕ УЕЗЖАЕТ */
+        /* ========== ЖЁСТКАЯ ФИКСАЦИЯ ПОЛЯ ВВОДА ========== */
         .chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #0e1621;
+            height: 100%;
             overflow: hidden;
+            position: relative;
         }
         .chat-header {
             padding: 12px 20px;
@@ -303,6 +305,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            min-height: 0; /* КЛЮЧЕВОЙ МОМЕНТ */
         }
         .input-area {
             background: #1f2c38;
@@ -311,8 +314,9 @@
             gap: 12px;
             border-top: 1px solid #2b3b4c;
             flex-shrink: 0;
+            margin-top: auto;
         }
-        /* Конец исправлений */
+        /* ============================================== */
         
         .message {
             display: flex;
