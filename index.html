@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Telegrall — мессенджер</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Telegrall — быстрый и безопасный мессенджер</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -11,7 +11,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
         body {
             background: #0e1621;
@@ -28,7 +28,10 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
+        
+        /* Аутентификация */
         .auth-wrapper {
             flex: 1;
             display: flex;
@@ -108,6 +111,10 @@
             cursor: pointer;
             width: 100%;
             margin-top: 8px;
+            transition: 0.2s;
+        }
+        .btn:hover {
+            background: #1e88e5;
         }
         .error-msg {
             color: #ff6b6b;
@@ -115,6 +122,8 @@
             text-align: center;
             margin-top: 8px;
         }
+        
+        /* Чат — основная вёрстка */
         .chat-layout {
             display: flex;
             height: 100%;
@@ -126,6 +135,7 @@
             border-right: 1px solid #2b3b4c;
             display: flex;
             flex-direction: column;
+            transition: transform 0.3s ease;
         }
         .user-header {
             padding: 16px 20px;
@@ -138,6 +148,10 @@
         .user-header span {
             font-weight: 600;
             color: white;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .icon-btn {
             background: none;
@@ -146,20 +160,55 @@
             font-size: 1.2rem;
             cursor: pointer;
             padding: 4px 8px;
+            border-radius: 8px;
+            min-width: 40px;
+            min-height: 40px;
+        }
+        .icon-btn:hover {
+            background: #2b3b4c;
         }
         .search-box {
             padding: 12px 16px;
             background: #1f2c38;
             border-bottom: 1px solid #2b3b4c;
+            position: relative;
         }
         .search-box input {
             width: 100%;
             background: #17212b;
             border: none;
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-radius: 20px;
             color: white;
             outline: none;
+            font-size: 15px;
+        }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 16px;
+            right: 16px;
+            background: #1f2c38;
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .search-results.show {
+            display: block;
+        }
+        .search-result-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #2b3b4c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .search-result-item:hover {
+            background: #2b3b4c;
         }
         .dialogs-list {
             flex: 1;
@@ -172,6 +221,7 @@
             padding: 12px 20px;
             cursor: pointer;
             border-bottom: 1px solid #1e2a32;
+            transition: 0.1s;
         }
         .dialog-item:hover {
             background: #1f2c38;
@@ -185,8 +235,10 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 1.2rem;
             color: white;
             position: relative;
+            flex-shrink: 0;
         }
         .online-dot {
             width: 12px;
@@ -201,6 +253,7 @@
         .dialog-name {
             font-weight: 600;
             color: #eef4ff;
+            font-size: 15px;
         }
         .chat-area {
             flex: 1;
@@ -222,6 +275,22 @@
             gap: 12px;
             flex: 1;
         }
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #2b9aff;
+            display: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+        }
+        .back-btn:hover {
+            background: #2b3b4c;
+        }
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -231,21 +300,46 @@
             gap: 8px;
         }
         .message {
+            display: flex;
             max-width: 70%;
-            padding: 8px 12px;
-            border-radius: 18px;
-            background: #1f2c38;
-            align-self: flex-start;
+            margin-bottom: 4px;
         }
         .message.outgoing {
-            background: #2b9aff;
             align-self: flex-end;
+            justify-content: flex-end;
+            margin-left: auto;
+        }
+        .message.incoming {
+            align-self: flex-start;
+            margin-right: auto;
+        }
+        .bubble {
+            background: #1f2c38;
+            padding: 8px 12px;
+            border-radius: 18px;
+            color: #eef4ff;
+            word-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+        .outgoing .bubble {
+            background: #2b9aff;
+            color: white;
+            border-bottom-right-radius: 4px;
         }
         .message-text {
+            font-size: 15px;
+            line-height: 1.4;
             word-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            overflow-wrap: break-word;
+            max-width: 100%;
         }
         .message-meta {
-            font-size: 10px;
+            font-size: 11px;
             color: #8e9eae;
             margin-top: 4px;
             text-align: right;
@@ -261,28 +355,143 @@
             flex: 1;
             background: #17212b;
             border: none;
-            padding: 10px 16px;
+            padding: 12px 16px;
             border-radius: 24px;
             color: white;
             outline: none;
+            font-size: 16px;
         }
         .send-btn {
             background: #2b9aff;
             border: none;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             color: white;
             cursor: pointer;
+            font-size: 1.2rem;
         }
         .empty-chat {
             text-align: center;
             color: #8e9eae;
             padding: 40px;
         }
+        
+        /* Админ-панель (скрыта) */
+        .admin-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f2c38;
+            border-radius: 16px;
+            padding: 16px;
+            width: 320px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid #2b9aff;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .admin-panel.show {
+            display: flex;
+        }
+        .admin-panel h4 {
+            color: #2b9aff;
+            margin-bottom: 8px;
+        }
+        .admin-panel input, .admin-panel textarea, .admin-panel select {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #2b3b4c;
+            background: #17212b;
+            color: white;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .admin-panel button {
+            background: #2b9aff;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        .ban-row {
+            display: flex;
+            gap: 8px;
+        }
+        .switch-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        
+        /* Адаптив для телефона (как в Telegram) */
         @media (max-width: 768px) {
-            .dialogs-panel { width: 280px; }
-            .message { max-width: 85%; }
+            .dialogs-panel {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+                background: #17212b;
+                transform: translateX(0);
+            }
+            .dialogs-panel.hide-on-mobile {
+                transform: translateX(-100%);
+            }
+            .chat-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 20;
+                background: #0e1621;
+                transform: translateX(100%);
+            }
+            .chat-area.show-on-mobile {
+                transform: translateX(0);
+            }
+            .back-btn {
+                display: flex;
+            }
+            .message {
+                max-width: 85%;
+            }
+            .avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            .user-header {
+                padding: 12px 16px;
+            }
+            .admin-panel {
+                width: calc(100% - 40px);
+                right: 20px;
+                left: 20px;
+                bottom: 20px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .dialogs-panel {
+                position: relative;
+                transform: translateX(0) !important;
+            }
+            .chat-area {
+                position: relative;
+                transform: translateX(0) !important;
+            }
+            .back-btn {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -310,6 +519,22 @@
     </div>
     <div id="chatContainer" style="display:none"></div>
 </div>
+<div id="adminPanel" class="admin-panel">
+    <h4>⚙️ Управление</h4>
+    <label class="switch-label">🔒 Режим изоляции <input type="checkbox" id="isolationMode"></label>
+    <label class="switch-label">🚫 Фильтр слов <input type="checkbox" id="bannedWordsToggle" checked></label>
+    <div class="ban-row"><input type="text" id="banUserId" placeholder="ID пользователя"><input type="number" id="banHours" placeholder="Часы"><button id="banBtn">Забанить</button></div>
+    <textarea id="sysMsgText" placeholder="Системное сообщение" rows="2"></textarea><button id="sendSysMsgBtn">Отправить всем</button>
+    <select id="broadcastSelect"><option value="all">Всем</option></select><textarea id="broadcastText" placeholder="Рассылка" rows="2"></textarea><button id="sendBroadcastBtn">Отправить</button>
+    <div style="display:flex;gap:8px"><input type="text" id="newBannedWord" placeholder="Запрещённое слово"><button id="addBannedWordBtn">➕</button></div>
+    <div id="bannedWordsList"></div>
+    <div id="usersManageList"></div>
+    <button id="viewAllChatsBtn">Просмотр чатов</button>
+    <button id="exportAllChatsBtn">Экспорт</button>
+    <button id="viewAdminLogsBtn">Логи</button>
+    <button id="closeAdminBtn">Закрыть</button>
+</div>
+
 <script>
 const SB_URL = "https://iiuahjmpszfcgtwapidt.supabase.co";
 const SB_KEY = "sb_publishable_iFYpqkv4D0qEOj4Dn1X9Nw_OH9d5Bji";
@@ -318,9 +543,21 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY);
 let currentUser = null;
 let currentChatId = null;
 let allUsers = [];
+let dialogsUsers = [];
+let isAdmin = false;
+let appSettings = { isolation: false, bannedWordsEnabled: true };
+let bannedWordsList = [];
 
 function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function formatTime(d) { return new Date(d).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'}); }
+function splitLongMessage(text) {
+    if (text.length <= 1000) return [text];
+    const parts = [];
+    for (let i = 0; i < text.length; i += 1000) {
+        parts.push(text.slice(i, i + 1000));
+    }
+    return parts;
+}
 
 async function loadCurrentUser() {
     const { data: { user } } = await sb.auth.getUser();
@@ -332,26 +569,87 @@ async function loadCurrentUser() {
         profile = { id: user.id, email: user.email, username, display_name: username };
     }
     currentUser = profile;
+    if (profile.is_admin || profile.email === 'mkhilobokiy@inbox.ru') isAdmin = true;
     return true;
 }
 
-async function loadUsers() {
-    const { data } = await sb.from('profiles').select('*').neq('id', currentUser.id);
-    allUsers = data || [];
-    const div = document.getElementById('usersList');
-    if (!div) return;
-    if (!allUsers.length) { div.innerHTML = '<div class="empty-chat">Нет пользователей</div>'; return; }
-    div.innerHTML = allUsers.map(u => `<div class="dialog-item" data-id="${u.id}"><div class="avatar">${(u.display_name||u.username)[0]}<span class="online-dot"></span></div><div class="dialog-name">${escapeHtml(u.display_name||u.username)}</div></div>`).join('');
-    document.querySelectorAll('.dialog-item').forEach(el => { el.onclick = () => openChat(el.dataset.id); });
+async function loadDialogs() {
+    const { data: messages } = await sb.from('messages').select('sender_id, receiver_id').or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
+    const userIds = new Set();
+    messages?.forEach(m => {
+        if (m.sender_id === currentUser.id) userIds.add(m.receiver_id);
+        if (m.receiver_id === currentUser.id) userIds.add(m.sender_id);
+    });
+    if (userIds.size === 0) {
+        dialogsUsers = [];
+        const div = document.getElementById('usersList');
+        if (div) div.innerHTML = '<div class="empty-chat">💬 У вас пока нет чатов. Начните общение через поиск</div>';
+        return;
+    }
+    const { data: users } = await sb.from('profiles').select('*').in('id', Array.from(userIds));
+    dialogsUsers = users || [];
+    renderDialogsList();
 }
 
-async function openChat(id) {
+function renderDialogsList() {
+    const div = document.getElementById('usersList');
+    if (!div) return;
+    if (dialogsUsers.length === 0) {
+        div.innerHTML = '<div class="empty-chat">💬 У вас пока нет чатов. Начните общение через поиск</div>';
+        return;
+    }
+    div.innerHTML = dialogsUsers.map(u => `<div class="dialog-item" data-id="${u.id}"><div class="avatar">${(u.display_name||u.username)[0]}<span class="online-dot"></span></div><div class="dialog-name">${escapeHtml(u.display_name||u.username)}</div></div>`).join('');
+    document.querySelectorAll('.dialog-item').forEach(el => { el.onclick = () => openUserChat(el.dataset.id); });
+}
+
+async function searchUsers(query) {
+    if (!query.trim()) {
+        document.getElementById('searchResults').classList.remove('show');
+        return;
+    }
+    const { data } = await sb.from('profiles')
+        .select('*')
+        .neq('id', currentUser.id)
+        .or(`display_name.ilike.%${query}%,username.ilike.%${query}%`);
+    const resultsDiv = document.getElementById('searchResults');
+    if (!data || data.length === 0) {
+        resultsDiv.innerHTML = '<div class="search-result-item">Ничего не найдено</div>';
+        resultsDiv.classList.add('show');
+        return;
+    }
+    resultsDiv.innerHTML = data.map(u => `<div class="search-result-item" data-id="${u.id}"><div class="avatar" style="width:32px;height:32px;font-size:0.8rem">${(u.display_name||u.username)[0]}</div><div>${escapeHtml(u.display_name||u.username)}<br><span style="font-size:11px;color:#8e9eae">@${escapeHtml(u.username)}</span></div></div>`).join('');
+    resultsDiv.classList.add('show');
+    document.querySelectorAll('.search-result-item[data-id]').forEach(el => {
+        el.onclick = () => {
+            const userId = el.dataset.id;
+            const user = data.find(u => u.id === userId);
+            openUserChat(userId, true);
+            document.getElementById('searchInput').value = '';
+            resultsDiv.classList.remove('show');
+        };
+    });
+}
+
+async function openUserChat(id, isNew = false) {
     currentChatId = id;
-    const user = allUsers.find(u => u.id === id);
+    const user = dialogsUsers.find(u => u.id === id) || allUsers.find(u => u.id === id);
     document.getElementById('chatUserName').innerText = user?.display_name || user?.username;
     document.getElementById('chatAvatar').innerText = (user?.display_name||user?.username)[0];
     document.getElementById('inputArea').style.display = 'flex';
     await loadMessages();
+    if (window.innerWidth <= 768) {
+        document.getElementById('dialogsPanel').classList.add('hide-on-mobile');
+        document.getElementById('chatAreaPanel').classList.add('show-on-mobile');
+    }
+    if (isNew) await loadDialogs();
+}
+
+function goBackToDialogs() {
+    if (window.innerWidth <= 768) {
+        document.getElementById('dialogsPanel').classList.remove('hide-on-mobile');
+        document.getElementById('chatAreaPanel').classList.remove('show-on-mobile');
+    }
+    currentChatId = null;
 }
 
 async function loadMessages() {
@@ -359,7 +657,7 @@ async function loadMessages() {
     const { data } = await sb.from('messages').select('*').or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatId}),and(sender_id.eq.${currentChatId},receiver_id.eq.${currentUser.id})`).order('created_at');
     const div = document.getElementById('messagesContainer');
     if (!data || !data.length) { div.innerHTML = '<div class="empty-chat">Нет сообщений</div>'; return; }
-    div.innerHTML = data.map(msg => `<div class="message ${msg.sender_id === currentUser.id ? 'outgoing' : ''}"><div class="message-text">${escapeHtml(msg.content)}</div><div class="message-meta">${formatTime(msg.created_at)}</div></div>`).join('');
+    div.innerHTML = data.map(m => `<div class="message ${m.sender_id === currentUser.id ? 'outgoing' : 'incoming'}"><div class="bubble"><div class="message-text">${escapeHtml(m.content)}</div><div class="message-meta">${formatTime(m.created_at)}</div></div></div>`).join('');
     div.scrollTop = div.scrollHeight;
 }
 
@@ -367,32 +665,150 @@ async function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
     if (!text || !currentChatId) return;
-    await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: currentChatId, content: text });
+    if (appSettings.isolation && !isAdmin) { alert('Режим изоляции'); return; }
+    if (await checkBannedWords(text) && !isAdmin) { alert('Запрещённое слово'); return; }
+    const parts = splitLongMessage(text);
+    for (let part of parts) {
+        await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: currentChatId, content: part });
+    }
     input.value = '';
     await loadMessages();
+    await loadDialogs();
 }
 
+async function checkBannedWords(text) {
+    if (!appSettings.bannedWordsEnabled) return false;
+    for (let w of bannedWordsList) if (text.toLowerCase().includes(w.toLowerCase())) return true;
+    return false;
+}
+
+async function loadAdminSettings() {
+    const { data } = await sb.from('app_settings').select('*');
+    if(data) data.forEach(s => { if(s.key === 'is_isolated') appSettings.isolation = s.value === 'true'; if(s.key === 'banned_words_enabled') appSettings.bannedWordsEnabled = s.value === 'true'; });
+    document.getElementById('isolationMode').checked = appSettings.isolation;
+    document.getElementById('bannedWordsToggle').checked = appSettings.bannedWordsEnabled;
+    const { data: banned } = await sb.from('banned_words').select('word');
+    bannedWordsList = banned?.map(b=>b.word) || [];
+    document.getElementById('bannedWordsList').innerHTML = bannedWordsList.map(w=>`<span style="background:#2b3b4c;padding:2px 8px;border-radius:12px;margin:2px;display:inline-block;">${w} 🔴</span>`).join('');
+}
+
+async function saveSetting(key, val) {
+    await sb.from('app_settings').upsert({ key, value: val.toString() });
+    if(key === 'is_isolated') appSettings.isolation = val;
+    if(key === 'banned_words_enabled') appSettings.bannedWordsEnabled = val;
+}
+
+async function banUser() {
+    const uid = document.getElementById('banUserId').value;
+    const hours = parseInt(document.getElementById('banHours').value);
+    const until = hours > 0 ? new Date(Date.now()+hours*3600000).toISOString() : null;
+    await sb.from('profiles').update({ is_banned: true, ban_until: until }).eq('id', uid);
+    alert('Забанен');
+}
+
+async function sendSystemMsg() {
+    const msg = document.getElementById('sysMsgText').value;
+    const { data: users } = await sb.from('profiles').select('id');
+    for(let u of users) await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: u.id, content: `🔔 СИСТЕМА: ${msg}` });
+    alert('Отправлено');
+}
+
+async function sendBroadcast() {
+    const msg = document.getElementById('broadcastText').value;
+    const { data: users } = await sb.from('profiles').select('id');
+    for(let u of users) await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: u.id, content: `📢 РАССЫЛКА: ${msg}` });
+    alert('Рассылка отправлена');
+}
+
+async function addBannedWord() {
+    const word = document.getElementById('newBannedWord').value.trim();
+    if(!word) return;
+    await sb.from('banned_words').insert({ word });
+    document.getElementById('newBannedWord').value = '';
+    await loadAdminSettings();
+}
+
+async function viewAllChats() {
+    const { data } = await sb.from('messages').select('*, s:profiles!sender_id(display_name), r:profiles!receiver_id(display_name)').limit(100);
+    let html = '<h3>Последние 100 сообщений</h3>';
+    data.forEach(m => html += `<p><b>${m.s?.display_name||'?'}</b> → <b>${m.r?.display_name||'?'}</b>: ${escapeHtml(m.content?.substring(0,100))}</p>`);
+    const w = window.open(); w.document.write(html);
+}
+
+async function exportChats() {
+    const { data } = await sb.from('messages').select('*');
+    const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'chats.json'; a.click();
+}
+
+async function viewLogs() {
+    const { data } = await sb.from('admin_logs').select('*, a:profiles!admin_id(display_name)').limit(100);
+    let html = '<h3>Логи</h3>';
+    data.forEach(l => html += `<p><b>${l.a?.display_name||'?'}</b> ${l.action} ${l.target_id||''} — ${new Date(l.created_at).toLocaleString()}</p>`);
+    const w = window.open(); w.document.write(html);
+}
+
+async function loadUsersManage() {
+    const { data } = await sb.from('profiles').select('id, display_name, username, is_admin');
+    document.getElementById('usersManageList').innerHTML = data.map(u => `
+        <div class="user-list-item">
+            <span>${escapeHtml(u.display_name||u.username)} ${u.is_admin ? '👑' : ''}</span>
+            <div><button onclick="window.toggleAdmin('${u.id}', ${!u.is_admin})" style="background:#2b9aff;border:none;padding:4px 8px;border-radius:6px;color:white">${u.is_admin ? '❌' : '👑'}</button></div>
+        </div>
+    `).join('');
+}
+
+window.toggleAdmin = async (id, make) => {
+    await sb.from('profiles').update({ is_admin: make }).eq('id', id);
+    await loadUsersManage();
+};
+
 async function initChat() {
+    const adminBtn = isAdmin ? '<button class="icon-btn" id="adminPanelBtn"><i class="fas fa-crown"></i></button>' : '';
     document.getElementById('chatContainer').innerHTML = `
         <div class="chat-layout">
-            <div class="dialogs-panel">
-                <div class="user-header"><span><i class="fas fa-user-circle"></i> <span id="myUserName"></span></span><div><button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button></div></div>
-                <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Поиск"></div>
+            <div class="dialogs-panel" id="dialogsPanel">
+                <div class="user-header"><span><i class="fas fa-user-circle"></i> <span id="myUserName"></span></span><div>${adminBtn}<button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button></div></div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Поиск по имени или @username...">
+                    <div id="searchResults" class="search-results"></div>
+                </div>
                 <div class="dialogs-list" id="usersList"></div>
             </div>
-            <div class="chat-area">
-                <div class="chat-header"><div class="chat-header-left"><div class="avatar" id="chatAvatar">?</div><h3 id="chatUserName"></h3></div></div>
+            <div class="chat-area" id="chatAreaPanel">
+                <div class="chat-header">
+                    <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+                    <div class="chat-header-left">
+                        <div class="avatar" id="chatAvatar">?</div>
+                        <h3 id="chatUserName"></h3>
+                    </div>
+                </div>
                 <div class="messages-container" id="messagesContainer"><div class="empty-chat">Выберите чат</div></div>
-                <div class="input-area" id="inputArea" style="display:none"><input type="text" class="message-input" id="messageInput" placeholder="Сообщение..."><button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button></div>
+                <div class="input-area" id="inputArea" style="display:none">
+                    <input type="text" class="message-input" id="messageInput" placeholder="Сообщение...">
+                    <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+                </div>
             </div>
         </div>
     `;
     document.getElementById('myUserName').innerText = currentUser.display_name || currentUser.username;
+    if(isAdmin) document.getElementById('adminPanelBtn')?.addEventListener('click', () => document.getElementById('adminPanel').classList.toggle('show'));
     document.getElementById('logoutBtn').onclick = async () => { await sb.auth.signOut(); location.reload(); };
     document.getElementById('sendBtn').onclick = sendMessage;
     document.getElementById('messageInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-    document.getElementById('searchInput').addEventListener('input', () => loadUsers());
-    await loadUsers();
+    document.getElementById('backBtn').addEventListener('click', goBackToDialogs);
+    
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => searchUsers(searchInput.value), 300);
+    });
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target)) document.getElementById('searchResults').classList.remove('show');
+    });
+    
+    await loadDialogs();
 }
 
 async function register(email, pwd, user, name) {
@@ -434,9 +850,23 @@ window.onload = async () => {
     if(session && await loadCurrentUser()) {
         document.getElementById('authContainer').style.display = 'none';
         document.getElementById('chatContainer').style.display = 'flex';
+        if(isAdmin) { await loadAdminSettings(); await loadUsersManage(); }
         await initChat();
     }
 };
+
+setTimeout(() => {
+    document.getElementById('banBtn')?.addEventListener('click', banUser);
+    document.getElementById('sendSysMsgBtn')?.addEventListener('click', sendSystemMsg);
+    document.getElementById('sendBroadcastBtn')?.addEventListener('click', sendBroadcast);
+    document.getElementById('viewAllChatsBtn')?.addEventListener('click', viewAllChats);
+    document.getElementById('exportAllChatsBtn')?.addEventListener('click', exportChats);
+    document.getElementById('viewAdminLogsBtn')?.addEventListener('click', viewLogs);
+    document.getElementById('addBannedWordBtn')?.addEventListener('click', addBannedWord);
+    document.getElementById('closeAdminBtn')?.addEventListener('click', () => document.getElementById('adminPanel').classList.remove('show'));
+    document.getElementById('isolationMode')?.addEventListener('change', (e) => saveSetting('is_isolated', e.target.checked));
+    document.getElementById('bannedWordsToggle')?.addEventListener('change', (e) => saveSetting('banned_words_enabled', e.target.checked));
+}, 200);
 </script>
 </body>
 </html>
