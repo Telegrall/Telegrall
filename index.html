@@ -28,6 +28,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
         
         /* Аутентификация */
@@ -118,7 +119,7 @@
             margin-top: 8px;
         }
         
-        /* СТАРЫЙ ДИЗАЙН (который тебе нравился) */
+        /* Чат */
         .chat-layout {
             display: flex;
             height: 100%;
@@ -144,6 +145,9 @@
             font-weight: 600;
             color: white;
             font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .icon-btn {
             background: none;
@@ -153,6 +157,11 @@
             cursor: pointer;
             padding: 4px 8px;
             border-radius: 8px;
+            min-width: 40px;
+            min-height: 40px;
+        }
+        .icon-btn:hover {
+            background: #2b3b4c;
         }
         .search-box {
             padding: 12px 16px;
@@ -164,10 +173,11 @@
             width: 100%;
             background: #17212b;
             border: none;
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-radius: 20px;
             color: white;
             outline: none;
+            font-size: 15px;
         }
         .search-results {
             position: absolute;
@@ -180,6 +190,7 @@
             overflow-y: auto;
             z-index: 100;
             display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .search-results.show {
             display: block;
@@ -192,6 +203,9 @@
             align-items: center;
             gap: 10px;
         }
+        .search-result-item:hover {
+            background: #2b3b4c;
+        }
         .dialogs-list {
             flex: 1;
             overflow-y: auto;
@@ -203,6 +217,7 @@
             padding: 12px 20px;
             cursor: pointer;
             border-bottom: 1px solid #1e2a32;
+            transition: 0.1s;
         }
         .dialog-item:hover {
             background: #1f2c38;
@@ -216,8 +231,10 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 1.2rem;
             color: white;
             position: relative;
+            flex-shrink: 0;
         }
         .online-dot {
             width: 12px;
@@ -232,16 +249,13 @@
         .dialog-name {
             font-weight: 600;
             color: #eef4ff;
+            font-size: 15px;
         }
-        
-        /* ЧАТ — ИСПРАВЛЕНО ПОЛЕ ВВОДА */
         .chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #0e1621;
-            height: 100%;
-            overflow: hidden;
         }
         .chat-header {
             padding: 12px 20px;
@@ -250,12 +264,13 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            flex-shrink: 0;
+            justify-content: space-between;
         }
         .chat-header-left {
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1;
         }
         .back-btn {
             background: none;
@@ -270,6 +285,9 @@
             align-items: center;
             justify-content: center;
         }
+        .back-btn:hover {
+            background: #2b3b4c;
+        }
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -278,27 +296,49 @@
             flex-direction: column;
             gap: 8px;
         }
+        
         .message {
+            display: flex;
             max-width: 70%;
-            padding: 8px 12px;
-            border-radius: 18px;
-            background: #1f2c38;
-            color: #eef4ff;
-            align-self: flex-start;
-            word-wrap: break-word;
-            word-break: break-word;
+            margin-bottom: 4px;
+            min-width: 40px;
         }
         .message.outgoing {
+            align-self: flex-end;
+            justify-content: flex-end;
+            margin-left: auto;
+        }
+        .message.incoming {
+            align-self: flex-start;
+            margin-right: auto;
+        }
+        .bubble {
+            background: #1f2c38;
+            padding: 8px 12px;
+            border-radius: 18px;
+            color: #eef4ff;
+            word-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+        .outgoing .bubble {
             background: #2b9aff;
             color: white;
-            align-self: flex-end;
+            border-bottom-right-radius: 4px;
         }
         .message-text {
             font-size: 15px;
             line-height: 1.4;
+            word-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            overflow-wrap: break-word;
+            max-width: 100%;
         }
         .message-meta {
-            font-size: 10px;
+            font-size: 11px;
             color: #8e9eae;
             margin-top: 4px;
             text-align: right;
@@ -309,13 +349,12 @@
             display: flex;
             gap: 12px;
             border-top: 1px solid #2b3b4c;
-            flex-shrink: 0;
         }
         .message-input {
             flex: 1;
             background: #17212b;
             border: none;
-            padding: 10px 16px;
+            padding: 12px 16px;
             border-radius: 24px;
             color: white;
             outline: none;
@@ -324,11 +363,12 @@
         .send-btn {
             background: #2b9aff;
             border: none;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             color: white;
             cursor: pointer;
+            font-size: 1.2rem;
         }
         .empty-chat {
             text-align: center;
@@ -344,6 +384,7 @@
                 width: 100%;
                 height: 100%;
                 z-index: 10;
+                background: #17212b;
                 transform: translateX(0);
             }
             .dialogs-panel.hide-on-mobile {
@@ -356,6 +397,7 @@
                 width: 100%;
                 height: 100%;
                 z-index: 20;
+                background: #0e1621;
                 transform: translateX(100%);
             }
             .chat-area.show-on-mobile {
@@ -371,6 +413,9 @@
                 width: 40px;
                 height: 40px;
                 font-size: 1rem;
+            }
+            .user-header {
+                padding: 12px 16px;
             }
         }
         
@@ -423,9 +468,56 @@ let currentUser = null;
 let currentChatId = null;
 let allUsers = [];
 let dialogsUsers = [];
+let isAdmin = false;
+let appSettings = { isolation: false, bannedWordsEnabled: true };
+let bannedWordsList = [];
+
+// ========== УВЕДОМЛЕНИЯ ==========
+async function askNotificationPermission() {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") {
+        console.log("Уведомления уже разрешены");
+    } else if (Notification.permission !== "denied") {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+            new Notification("✅ Уведомления включены", {
+                body: "Теперь вы будете получать оповещения о новых сообщениях",
+                icon: "https://cdn-icons-png.flaticon.com/512/906/906377.png"
+            });
+        }
+    }
+}
+
+function showMessageNotification(senderName, messageText, chatId) {
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+    if (document.hasFocus() && currentChatId === chatId) return;
+    
+    const notification = new Notification(`📨 Новое сообщение от ${senderName}`, {
+        body: messageText.length > 100 ? messageText.slice(0, 100) + "..." : messageText,
+        icon: "https://cdn-icons-png.flaticon.com/512/906/906377.png",
+        tag: chatId,
+        renotify: false
+    });
+    
+    notification.onclick = () => {
+        window.focus();
+        if (currentChatId !== chatId) {
+            openUserChat(chatId);
+        }
+    };
+}
 
 function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function formatTime(d) { return new Date(d).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'}); }
+function splitLongMessage(text) {
+    if (text.length <= 1000) return [text];
+    const parts = [];
+    for (let i = 0; i < text.length; i += 1000) {
+        parts.push(text.slice(i, i + 1000));
+    }
+    return parts;
+}
 
 async function loadCurrentUser() {
     const { data: { user } } = await sb.auth.getUser();
@@ -437,6 +529,7 @@ async function loadCurrentUser() {
         profile = { id: user.id, email: user.email, username, display_name: username };
     }
     currentUser = profile;
+    if (profile.is_admin || profile.email === 'mkhilobokiy@inbox.ru') isAdmin = true;
     return true;
 }
 
@@ -524,7 +617,7 @@ async function loadMessages() {
     const { data } = await sb.from('messages').select('*').or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentChatId}),and(sender_id.eq.${currentChatId},receiver_id.eq.${currentUser.id})`).order('created_at');
     const div = document.getElementById('messagesContainer');
     if (!data || !data.length) { div.innerHTML = '<div class="empty-chat">Нет сообщений</div>'; return; }
-    div.innerHTML = data.map(m => `<div class="message ${m.sender_id === currentUser.id ? 'outgoing' : 'incoming'}"><div class="message-text">${escapeHtml(m.content)}</div><div class="message-meta">${formatTime(m.created_at)}</div></div>`).join('');
+    div.innerHTML = data.map(m => `<div class="message ${m.sender_id === currentUser.id ? 'outgoing' : 'incoming'}"><div class="bubble"><div class="message-text">${escapeHtml(m.content)}</div><div class="message-meta">${formatTime(m.created_at)}</div></div></div>`).join('');
     div.scrollTop = div.scrollHeight;
 }
 
@@ -532,10 +625,21 @@ async function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
     if (!text || !currentChatId) return;
-    await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: currentChatId, content: text });
+    if (appSettings.isolation && !isAdmin) { alert('Режим изоляции'); return; }
+    if (await checkBannedWords(text) && !isAdmin) { alert('Запрещённое слово'); return; }
+    const parts = splitLongMessage(text);
+    for (let part of parts) {
+        await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: currentChatId, content: part });
+    }
     input.value = '';
     await loadMessages();
     await loadDialogs();
+}
+
+async function checkBannedWords(text) {
+    if (!appSettings.bannedWordsEnabled) return false;
+    for (let w of bannedWordsList) if (text.toLowerCase().includes(w.toLowerCase())) return true;
+    return false;
 }
 
 async function initChat() {
@@ -581,6 +685,26 @@ async function initChat() {
         if (!searchInput.contains(e.target)) document.getElementById('searchResults').classList.remove('show');
     });
     
+    // Подписка на новые сообщения (с уведомлениями)
+    sb.channel('messages')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+            const newMsg = payload.new;
+            // Обновляем сообщения, если чат открыт
+            if (currentChatId === newMsg.sender_id || currentChatId === newMsg.receiver_id) {
+                await loadMessages();
+            }
+            // Показываем уведомление, если сообщение не от себя и не в активном чате
+            if (newMsg.sender_id !== currentUser.id) {
+                const sender = dialogsUsers.find(u => u.id === newMsg.sender_id) || allUsers.find(u => u.id === newMsg.sender_id);
+                if (sender) {
+                    showMessageNotification(sender.display_name || sender.username, newMsg.content, newMsg.sender_id);
+                }
+            }
+            // Обновляем список диалогов (чтобы новый чат появился)
+            await loadDialogs();
+        })
+        .subscribe();
+    
     await loadDialogs();
 }
 
@@ -618,7 +742,9 @@ document.querySelectorAll('.auth-tab').forEach(t => {
     };
 });
 
+// Запрашиваем разрешение на уведомления при загрузке
 window.onload = async () => {
+    await askNotificationPermission();
     const { data: { session } } = await sb.auth.getSession();
     if(session && await loadCurrentUser()) {
         document.getElementById('authContainer').style.display = 'none';
