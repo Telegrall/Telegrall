@@ -376,6 +376,21 @@
             padding: 40px;
         }
         
+        /* Кнопка уведомлений */
+        .notification-btn {
+            background: #2b3b4c;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        .notification-btn.active {
+            background: #2b9aff;
+        }
+        
         @media (max-width: 768px) {
             .dialogs-panel {
                 position: absolute;
@@ -470,13 +485,17 @@ let allUsers = [];
 let dialogsUsers = [];
 
 // ========== УВЕДОМЛЕНИЯ ==========
+let notificationsEnabled = false;
+
 async function askNotificationPermission() {
     if (!("Notification" in window)) return;
     if (Notification.permission === "granted") {
+        notificationsEnabled = true;
         console.log("Уведомления уже разрешены");
     } else if (Notification.permission !== "denied") {
         const permission = await Notification.requestPermission();
-        if (permission === "granted") {
+        notificationsEnabled = (permission === "granted");
+        if (notificationsEnabled) {
             new Notification("✅ Уведомления включены", {
                 body: "Теперь вы будете получать оповещения о новых сообщениях",
                 icon: "https://cdn-icons-png.flaticon.com/512/906/906377.png"
@@ -486,7 +505,7 @@ async function askNotificationPermission() {
 }
 
 function showMessageNotification(senderName, messageText, chatId) {
-    if (!("Notification" in window)) return;
+    if (!notificationsEnabled) return;
     if (Notification.permission !== "granted") return;
     if (document.hasFocus() && currentChatId === chatId) return;
     
@@ -503,6 +522,29 @@ function showMessageNotification(senderName, messageText, chatId) {
             openUserChat(chatId);
         }
     };
+}
+
+function enableNotifications() {
+    if (!("Notification" in window)) {
+        alert("Ваш браузер не поддерживает уведомления");
+        return;
+    }
+    if (Notification.permission === "granted") {
+        notificationsEnabled = true;
+        alert("Уведомления уже включены");
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(perm => {
+            notificationsEnabled = (perm === "granted");
+            if (notificationsEnabled) {
+                new Notification("✅ Уведомления включены", {
+                    body: "Теперь вы будете получать оповещения",
+                    icon: "https://cdn-icons-png.flaticon.com/512/906/906377.png"
+                });
+            }
+        });
+    } else {
+        alert("Уведомления запрещены в настройках браузера. Нажмите на замок в адресной строке и разрешите уведомления.");
+    }
 }
 
 function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
@@ -634,7 +676,13 @@ async function initChat() {
     document.getElementById('chatContainer').innerHTML = `
         <div class="chat-layout">
             <div class="dialogs-panel" id="dialogsPanel">
-                <div class="user-header"><span><i class="fas fa-user-circle"></i> <span id="myUserName"></span></span><div><button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button></div></div>
+                <div class="user-header">
+                    <span><i class="fas fa-user-circle"></i> <span id="myUserName"></span></span>
+                    <div>
+                        <button class="notification-btn" id="notifyBtn">🔔 Уведомления</button>
+                        <button class="icon-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
+                    </div>
+                </div>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="🔍 Поиск по имени или @username...">
                     <div id="searchResults" class="search-results"></div>
@@ -662,6 +710,7 @@ async function initChat() {
     document.getElementById('sendBtn').onclick = sendMessage;
     document.getElementById('messageInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
     document.getElementById('backBtn').addEventListener('click', goBackToDialogs);
+    document.getElementById('notifyBtn').onclick = enableNotifications;
     
     const searchInput = document.getElementById('searchInput');
     let searchTimeout;
@@ -728,12 +777,12 @@ document.querySelectorAll('.auth-tab').forEach(t => {
 });
 
 window.onload = async () => {
-    await askNotificationPermission();
     const { data: { session } } = await sb.auth.getSession();
     if(session && await loadCurrentUser()) {
         document.getElementById('authContainer').style.display = 'none';
         document.getElementById('chatContainer').style.display = 'flex';
         await initChat();
+        // Не запрашиваем уведомления автоматически, только по кнопке
     }
 };
 </script>
