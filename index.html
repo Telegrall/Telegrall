@@ -31,6 +31,88 @@
             position: relative;
         }
         
+        /* Анимация новой функции */
+        .feature-intro {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2c38;
+            border-radius: 60px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 1000;
+            border: 1px solid #2b9aff;
+            box-shadow: 0 8px 24px rgba(43, 154, 255, 0.2);
+            animation: slideUp 0.5s ease, fadeOut 0.5s ease 4.5s forwards;
+            max-width: 90%;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+        .feature-intro .avatars {
+            display: flex;
+            align-items: center;
+        }
+        .feature-intro .avatar-small {
+            width: 40px;
+            height: 40px;
+            background: #2b9aff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            border: 2px solid #17212b;
+        }
+        .feature-intro .avatar-small:first-child {
+            margin-right: -10px;
+            z-index: 2;
+        }
+        .feature-intro .avatar-small:last-child {
+            margin-left: -10px;
+            z-index: 1;
+            background: #4bcb6e;
+        }
+        .wave-animation {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .wave-animation span {
+            width: 4px;
+            height: 16px;
+            background: #2b9aff;
+            border-radius: 4px;
+            animation: wave 1.2s ease-in-out infinite;
+        }
+        .wave-animation span:nth-child(2) { animation-delay: 0.1s; height: 24px; }
+        .wave-animation span:nth-child(3) { animation-delay: 0.2s; height: 20px; }
+        .wave-animation span:nth-child(4) { animation-delay: 0.3s; height: 28px; }
+        .wave-animation span:nth-child(5) { animation-delay: 0.4s; height: 18px; }
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.8); }
+        }
+        .feature-text {
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .feature-text small {
+            display: block;
+            font-size: 0.75rem;
+            color: #8e9eae;
+            font-weight: normal;
+        }
+        
         /* Аутентификация */
         .auth-wrapper {
             flex: 1;
@@ -288,6 +370,22 @@
         .back-btn:hover {
             background: #2b3b4c;
         }
+        .call-btn {
+            background: none;
+            border: none;
+            color: #4bcb6e;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(75, 203, 110, 0.1);
+        }
+        .call-btn:hover {
+            background: rgba(75, 203, 110, 0.2);
+        }
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -432,6 +530,13 @@
             .user-header {
                 padding: 12px 16px;
             }
+            .feature-intro {
+                bottom: 20px;
+                padding: 12px 18px;
+            }
+            .feature-text {
+                font-size: 0.9rem;
+            }
         }
         
         @media (min-width: 769px) {
@@ -472,6 +577,19 @@
         </div>
     </div>
     <div id="chatContainer" style="display:none"></div>
+    <div id="featureIntro" class="feature-intro" style="display: none;">
+        <div class="avatars">
+            <div class="avatar-small">🐋</div>
+            <div class="avatar-small">⭐</div>
+        </div>
+        <div class="wave-animation">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="feature-text">
+            Новая функция: Звонки
+            <small>Теперь со звонками · Нажми 📞 в чате</small>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -483,15 +601,25 @@ let currentUser = null;
 let currentChatId = null;
 let allUsers = [];
 let dialogsUsers = [];
-
-// ========== УВЕДОМЛЕНИЯ ==========
 let notificationsEnabled = false;
+
+// Показ анимации новой функции (один раз)
+const FEATURE_SHOWN_KEY = 'telegram_feature_calls_shown_v1';
+function showFeatureIntroIfNeeded() {
+    const shown = localStorage.getItem(FEATURE_SHOWN_KEY);
+    if (!shown) {
+        document.getElementById('featureIntro').style.display = 'flex';
+        localStorage.setItem(FEATURE_SHOWN_KEY, 'true');
+        setTimeout(() => {
+            document.getElementById('featureIntro').style.display = 'none';
+        }, 5000);
+    }
+}
 
 async function askNotificationPermission() {
     if (!("Notification" in window)) return;
     if (Notification.permission === "granted") {
         notificationsEnabled = true;
-        console.log("Уведомления уже разрешены");
     } else if (Notification.permission !== "denied") {
         const permission = await Notification.requestPermission();
         notificationsEnabled = (permission === "granted");
@@ -634,6 +762,7 @@ async function openUserChat(id, isNew = false) {
     document.getElementById('chatUserName').innerText = user?.display_name || user?.username;
     document.getElementById('chatAvatar').innerText = (user?.display_name||user?.username)[0];
     document.getElementById('inputArea').style.display = 'flex';
+    document.getElementById('callBtn').style.display = 'flex';
     await loadMessages();
     if (window.innerWidth <= 768) {
         document.getElementById('dialogsPanel').classList.add('hide-on-mobile');
@@ -672,6 +801,11 @@ async function sendMessage() {
     await loadDialogs();
 }
 
+function initiateCall() {
+    // Заглушка для звонков — пока просто показываем, что функция в разработке
+    alert('📞 Звонки уже почти готовы! Функция появится в следующем обновлении.');
+}
+
 async function initChat() {
     document.getElementById('chatContainer').innerHTML = `
         <div class="chat-layout">
@@ -696,6 +830,9 @@ async function initChat() {
                         <div class="avatar" id="chatAvatar">?</div>
                         <h3 id="chatUserName"></h3>
                     </div>
+                    <button class="call-btn" id="callBtn" style="display: none;" onclick="initiateCall()">
+                        <i class="fas fa-phone-alt"></i> Позвонить
+                    </button>
                 </div>
                 <div class="messages-container" id="messagesContainer"><div class="empty-chat">Выберите чат</div></div>
                 <div class="input-area" id="inputArea" style="display:none">
@@ -722,7 +859,6 @@ async function initChat() {
         if (!searchInput.contains(e.target)) document.getElementById('searchResults').classList.remove('show');
     });
     
-    // Подписка на новые сообщения (с уведомлениями)
     sb.channel('messages')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
             const newMsg = payload.new;
@@ -740,6 +876,7 @@ async function initChat() {
         .subscribe();
     
     await loadDialogs();
+    showFeatureIntroIfNeeded();
 }
 
 async function register(email, pwd, user, name) {
@@ -776,13 +913,14 @@ document.querySelectorAll('.auth-tab').forEach(t => {
     };
 });
 
+window.initiateCall = initiateCall;
+
 window.onload = async () => {
     const { data: { session } } = await sb.auth.getSession();
     if(session && await loadCurrentUser()) {
         document.getElementById('authContainer').style.display = 'none';
         document.getElementById('chatContainer').style.display = 'flex';
         await initChat();
-        // Не запрашиваем уведомления автоматически, только по кнопке
     }
 };
 </script>
