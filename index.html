@@ -31,6 +31,80 @@
             position: relative;
         }
         
+        /* Экран звонка */
+        .call-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0e1621;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .call-screen.show {
+            display: flex;
+        }
+        .call-avatar {
+            width: 120px;
+            height: 120px;
+            background: #2b9aff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(43, 154, 255, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(43, 154, 255, 0.2); }
+        }
+        .call-name {
+            font-size: 1.8rem;
+            color: white;
+            margin-bottom: 10px;
+        }
+        .call-status {
+            color: #8e9eae;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        .call-actions {
+            display: flex;
+            gap: 30px;
+        }
+        .call-btn-action {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .call-accept {
+            background: #4bcb6e;
+            color: white;
+        }
+        .call-reject {
+            background: #ff3b30;
+            color: white;
+        }
+        .call-end {
+            background: #ff3b30;
+            color: white;
+        }
+        
         /* Анимация новой функции */
         .feature-intro {
             position: fixed;
@@ -429,11 +503,6 @@
         .message-text {
             font-size: 15px;
             line-height: 1.4;
-            word-wrap: break-word;
-            word-break: break-word;
-            white-space: normal;
-            overflow-wrap: break-word;
-            max-width: 100%;
         }
         .message-meta {
             font-size: 11px;
@@ -474,7 +543,6 @@
             padding: 40px;
         }
         
-        /* Кнопка уведомлений */
         .notification-btn {
             background: #2b3b4c;
             border: none;
@@ -484,9 +552,6 @@
             font-size: 0.7rem;
             cursor: pointer;
             margin-left: 8px;
-        }
-        .notification-btn.active {
-            background: #2b9aff;
         }
         
         @media (max-width: 768px) {
@@ -534,9 +599,6 @@
                 bottom: 20px;
                 padding: 12px 18px;
             }
-            .feature-text {
-                font-size: 0.9rem;
-            }
         }
         
         @media (min-width: 769px) {
@@ -556,6 +618,14 @@
 </head>
 <body>
 <div class="app">
+    <!-- Экран звонка -->
+    <div class="call-screen" id="callScreen">
+        <div class="call-avatar" id="callAvatar">🐋</div>
+        <div class="call-name" id="callName"></div>
+        <div class="call-status" id="callStatus">Вызов...</div>
+        <div class="call-actions" id="callActions"></div>
+    </div>
+
     <div id="authContainer" class="auth-wrapper">
         <div class="auth-card">
             <div class="auth-header"><h1>TeleGdam</h1></div>
@@ -599,12 +669,27 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
 let currentUser = null;
 let currentChatId = null;
+let currentChatUser = null;
 let allUsers = [];
 let dialogsUsers = [];
 let notificationsEnabled = false;
 
-// Показ анимации новой функции (один раз)
-const FEATURE_SHOWN_KEY = 'telegram_feature_calls_shown_v1';
+// WebRTC переменные
+let localStream = null;
+let peerConnection = null;
+let currentCallId = null;
+let callChannel = null;
+let pendingIceCandidates = [];
+
+const rtcConfig = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+};
+
+// Показ анимации новой функции
+const FEATURE_SHOWN_KEY = 'telegram_feature_calls_shown_v2';
 function showFeatureIntroIfNeeded() {
     const shown = localStorage.getItem(FEATURE_SHOWN_KEY);
     if (!shown) {
@@ -616,75 +701,8 @@ function showFeatureIntroIfNeeded() {
     }
 }
 
-async function askNotificationPermission() {
-    if (!("Notification" in window)) return;
-    if (Notification.permission === "granted") {
-        notificationsEnabled = true;
-    } else if (Notification.permission !== "denied") {
-        const permission = await Notification.requestPermission();
-        notificationsEnabled = (permission === "granted");
-        if (notificationsEnabled) {
-            new Notification("✅ Уведомления включены", {
-                body: "Теперь вы будете получать оповещения о новых сообщениях",
-                icon: "https://cdn-icons-png.flaticon.com/512/906/906377.png"
-            });
-        }
-    }
-}
-
-function showMessageNotification(senderName, messageText, chatId) {
-    if (!notificationsEnabled) return;
-    if (Notification.permission !== "granted") return;
-    if (document.hasFocus() && currentChatId === chatId) return;
-    
-    const notification = new Notification(`📨 Новое сообщение от ${senderName}`, {
-        body: messageText.length > 100 ? messageText.slice(0, 100) + "..." : messageText,
-        icon: "https://cdn-icons-png.flaticon.com/512/906/906377.png",
-        tag: chatId,
-        renotify: false
-    });
-    
-    notification.onclick = () => {
-        window.focus();
-        if (currentChatId !== chatId) {
-            openUserChat(chatId);
-        }
-    };
-}
-
-function enableNotifications() {
-    if (!("Notification" in window)) {
-        alert("Ваш браузер не поддерживает уведомления");
-        return;
-    }
-    if (Notification.permission === "granted") {
-        notificationsEnabled = true;
-        alert("Уведомления уже включены");
-    } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(perm => {
-            notificationsEnabled = (perm === "granted");
-            if (notificationsEnabled) {
-                new Notification("✅ Уведомления включены", {
-                    body: "Теперь вы будете получать оповещения",
-                    icon: "https://cdn-icons-png.flaticon.com/512/906/906377.png"
-                });
-            }
-        });
-    } else {
-        alert("Уведомления запрещены в настройках браузера. Нажмите на замок в адресной строке и разрешите уведомления.");
-    }
-}
-
 function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 function formatTime(d) { return new Date(d).toLocaleTimeString('ru', {hour:'2-digit', minute:'2-digit'}); }
-function splitLongMessage(text) {
-    if (text.length <= 1000) return [text];
-    const parts = [];
-    for (let i = 0; i < text.length; i += 1000) {
-        parts.push(text.slice(i, i + 1000));
-    }
-    return parts;
-}
 
 async function loadCurrentUser() {
     const { data: { user } } = await sb.auth.getUser();
@@ -709,7 +727,7 @@ async function loadDialogs() {
     if (userIds.size === 0) {
         dialogsUsers = [];
         const div = document.getElementById('usersList');
-        if (div) div.innerHTML = '<div class="empty-chat">💬 У вас пока нет чатов. Начните общение через поиск</div>';
+        if (div) div.innerHTML = '<div class="empty-chat">💬 У вас пока нет чатов</div>';
         return;
     }
     const { data: users } = await sb.from('profiles').select('*').in('id', Array.from(userIds));
@@ -721,7 +739,7 @@ function renderDialogsList() {
     const div = document.getElementById('usersList');
     if (!div) return;
     if (dialogsUsers.length === 0) {
-        div.innerHTML = '<div class="empty-chat">💬 У вас пока нет чатов. Начните общение через поиск</div>';
+        div.innerHTML = '<div class="empty-chat">💬 У вас пока нет чатов</div>';
         return;
     }
     div.innerHTML = dialogsUsers.map(u => `<div class="dialog-item" data-id="${u.id}"><div class="avatar">${(u.display_name||u.username)[0]}<span class="online-dot"></span></div><div class="dialog-name">${escapeHtml(u.display_name||u.username)}</div></div>`).join('');
@@ -733,10 +751,7 @@ async function searchUsers(query) {
         document.getElementById('searchResults').classList.remove('show');
         return;
     }
-    const { data } = await sb.from('profiles')
-        .select('*')
-        .neq('id', currentUser.id)
-        .or(`display_name.ilike.%${query}%,username.ilike.%${query}%`);
+    const { data } = await sb.from('profiles').select('*').neq('id', currentUser.id).or(`display_name.ilike.%${query}%,username.ilike.%${query}%`);
     const resultsDiv = document.getElementById('searchResults');
     if (!data || data.length === 0) {
         resultsDiv.innerHTML = '<div class="search-result-item">Ничего не найдено</div>';
@@ -758,9 +773,9 @@ async function searchUsers(query) {
 
 async function openUserChat(id, isNew = false) {
     currentChatId = id;
-    const user = dialogsUsers.find(u => u.id === id) || allUsers.find(u => u.id === id);
-    document.getElementById('chatUserName').innerText = user?.display_name || user?.username;
-    document.getElementById('chatAvatar').innerText = (user?.display_name||user?.username)[0];
+    currentChatUser = dialogsUsers.find(u => u.id === id) || allUsers.find(u => u.id === id);
+    document.getElementById('chatUserName').innerText = currentChatUser?.display_name || currentChatUser?.username;
+    document.getElementById('chatAvatar').innerText = (currentChatUser?.display_name||currentChatUser?.username)[0];
     document.getElementById('inputArea').style.display = 'flex';
     document.getElementById('callBtn').style.display = 'flex';
     await loadMessages();
@@ -777,6 +792,7 @@ function goBackToDialogs() {
         document.getElementById('chatAreaPanel').classList.remove('show-on-mobile');
     }
     currentChatId = null;
+    currentChatUser = null;
 }
 
 async function loadMessages() {
@@ -792,18 +808,309 @@ async function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
     if (!text || !currentChatId) return;
-    const parts = splitLongMessage(text);
-    for (let part of parts) {
-        await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: currentChatId, content: part });
-    }
+    await sb.from('messages').insert({ sender_id: currentUser.id, receiver_id: currentChatId, content: text });
     input.value = '';
     await loadMessages();
     await loadDialogs();
 }
 
-function initiateCall() {
-    // Заглушка для звонков — пока просто показываем, что функция в разработке
-    alert('📞 Звонки уже почти готовы! Функция появится в следующем обновлении.');
+// ========== ЗВОНКИ ==========
+
+function showCallScreen(name, status, showAccept = false) {
+    const screen = document.getElementById('callScreen');
+    document.getElementById('callName').innerText = name;
+    document.getElementById('callAvatar').innerText = name[0];
+    document.getElementById('callStatus').innerText = status;
+    
+    const actions = document.getElementById('callActions');
+    if (showAccept) {
+        actions.innerHTML = `
+            <button class="call-btn-action call-accept" onclick="acceptCall()"><i class="fas fa-phone-alt"></i></button>
+            <button class="call-btn-action call-reject" onclick="rejectCall()"><i class="fas fa-phone-slash"></i></button>
+        `;
+    } else {
+        actions.innerHTML = `
+            <button class="call-btn-action call-end" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+        `;
+    }
+    
+    screen.classList.add('show');
+}
+
+function hideCallScreen() {
+    document.getElementById('callScreen').classList.remove('show');
+    stopLocalStream();
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+    if (callChannel) {
+        callChannel.unsubscribe();
+        callChannel = null;
+    }
+    currentCallId = null;
+}
+
+async function stopLocalStream() {
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+}
+
+async function getLocalStream() {
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        return true;
+    } catch (e) {
+        console.error('Ошибка доступа к микрофону:', e);
+        alert('Не удалось получить доступ к микрофону');
+        return false;
+    }
+}
+
+async function createPeerConnection() {
+    peerConnection = new RTCPeerConnection(rtcConfig);
+    
+    // Добавляем локальный аудиопоток
+    if (localStream) {
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+        });
+    }
+    
+    // Получаем удалённый аудиопоток
+    peerConnection.ontrack = (event) => {
+        const audio = new Audio();
+        audio.srcObject = event.streams[0];
+        audio.play().catch(e => console.log('Автовоспроизведение заблокировано'));
+    };
+    
+    // Отправляем ICE кандидаты через Supabase
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate && currentCallId) {
+            sendIceCandidate(event.candidate);
+        }
+    };
+    
+    // Обработка состояния соединения
+    peerConnection.onconnectionstatechange = () => {
+        if (peerConnection.connectionState === 'connected') {
+            document.getElementById('callStatus').innerText = 'Соединение установлено';
+        } else if (peerConnection.connectionState === 'disconnected' || 
+                   peerConnection.connectionState === 'failed' ||
+                   peerConnection.connectionState === 'closed') {
+            hideCallScreen();
+        }
+    };
+}
+
+async function sendIceCandidate(candidate) {
+    if (!currentCallId) return;
+    
+    const isCaller = await checkIfCaller();
+    const field = isCaller ? 'caller_ice' : 'receiver_ice';
+    
+    // Получаем текущие кандидаты
+    const { data } = await sb.from('calls').select(field).eq('id', currentCallId).single();
+    let iceList = [];
+    if (data && data[field]) {
+        iceList = JSON.parse(data[field]);
+    }
+    iceList.push(candidate);
+    
+    await sb.from('calls').update({ [field]: JSON.stringify(iceList) }).eq('id', currentCallId);
+}
+
+async function checkIfCaller() {
+    const { data } = await sb.from('calls').select('caller_id').eq('id', currentCallId).single();
+    return data?.caller_id === currentUser.id;
+}
+
+async function initiateCall() {
+    if (!currentChatId || !currentChatUser) return;
+    
+    const hasAudio = await getLocalStream();
+    if (!hasAudio) return;
+    
+    // Создаём запись о звонке
+    const { data, error } = await sb.from('calls').insert({
+        caller_id: currentUser.id,
+        receiver_id: currentChatId,
+        status: 'ringing'
+    }).select().single();
+    
+    if (error) {
+        console.error('Ошибка создания звонка:', error);
+        return;
+    }
+    
+    currentCallId = data.id;
+    showCallScreen(currentChatUser.display_name || currentChatUser.username, 'Звоним...');
+    
+    // Подписываемся на обновления этого звонка
+    callChannel = sb.channel(`call:${currentCallId}`).on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'calls',
+        filter: `id=eq.${currentCallId}`
+    }, handleCallUpdate).subscribe();
+    
+    await createPeerConnection();
+    
+    // Создаём offer
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    
+    // Сохраняем offer в базе
+    await sb.from('calls').update({ offer: JSON.stringify(offer) }).eq('id', currentCallId);
+}
+
+async function handleCallUpdate(payload) {
+    const call = payload.new;
+    if (!call || call.id !== currentCallId) return;
+    
+    // Если звонок завершён
+    if (call.status === 'ended' || call.status === 'rejected') {
+        hideCallScreen();
+        return;
+    }
+    
+    // Если мы звонящий
+    const isCaller = call.caller_id === currentUser.id;
+    
+    if (isCaller) {
+        // Ждём ответа
+        if (call.status === 'accepted' && call.answer) {
+            if (!peerConnection) await createPeerConnection();
+            const answer = JSON.parse(call.answer);
+            await peerConnection.setRemoteDescription(answer);
+            document.getElementById('callStatus').innerText = 'Соединение...';
+            
+            // Добавляем ICE кандидаты получателя
+            if (call.receiver_ice) {
+                const iceList = JSON.parse(call.receiver_ice);
+                for (const ice of iceList) {
+                    await peerConnection.addIceCandidate(ice);
+                }
+            }
+        }
+        
+        // Проверяем ICE кандидаты получателя
+        if (call.receiver_ice && peerConnection?.remoteDescription) {
+            const iceList = JSON.parse(call.receiver_ice);
+            for (const ice of iceList) {
+                try {
+                    await peerConnection.addIceCandidate(ice);
+                } catch(e) {}
+            }
+        }
+    } else {
+        // Мы принимающий
+        if (call.status === 'ringing') {
+            const caller = await sb.from('profiles').select('*').eq('id', call.caller_id).single();
+            const callerName = caller.data?.display_name || caller.data?.username || 'Пользователь';
+            showCallScreen(callerName, 'Входящий звонок...', true);
+        }
+        
+        if (call.offer && peerConnection) {
+            const offer = JSON.parse(call.offer);
+            await peerConnection.setRemoteDescription(offer);
+        }
+        
+        if (call.caller_ice && peerConnection?.remoteDescription) {
+            const iceList = JSON.parse(call.caller_ice);
+            for (const ice of iceList) {
+                try {
+                    await peerConnection.addIceCandidate(ice);
+                } catch(e) {}
+            }
+        }
+    }
+}
+
+async function acceptCall() {
+    if (!currentCallId) return;
+    
+    const hasAudio = await getLocalStream();
+    if (!hasAudio) {
+        rejectCall();
+        return;
+    }
+    
+    await createPeerConnection();
+    
+    // Получаем offer из базы
+    const { data } = await sb.from('calls').select('offer').eq('id', currentCallId).single();
+    if (data?.offer) {
+        const offer = JSON.parse(data.offer);
+        await peerConnection.setRemoteDescription(offer);
+    }
+    
+    // Создаём answer
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    
+    // Обновляем статус и сохраняем answer
+    await sb.from('calls').update({
+        status: 'accepted',
+        answer: JSON.stringify(answer)
+    }).eq('id', currentCallId);
+    
+    document.getElementById('callStatus').innerText = 'Соединение...';
+    document.getElementById('callActions').innerHTML = `
+        <button class="call-btn-action call-end" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+    `;
+}
+
+async function rejectCall() {
+    if (currentCallId) {
+        await sb.from('calls').update({ status: 'rejected' }).eq('id', currentCallId);
+    }
+    hideCallScreen();
+}
+
+async function endCall() {
+    if (currentCallId) {
+        await sb.from('calls').update({ status: 'ended' }).eq('id', currentCallId);
+    }
+    hideCallScreen();
+}
+
+// Глобальные функции для кнопок
+window.initiateCall = initiateCall;
+window.acceptCall = acceptCall;
+window.rejectCall = rejectCall;
+window.endCall = endCall;
+
+// Подписка на входящие звонки
+function subscribeToIncomingCalls() {
+    sb.channel('incoming_calls')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'calls',
+            filter: `receiver_id=eq.${currentUser.id}`
+        }, async (payload) => {
+            const call = payload.new;
+            if (call.status === 'ringing') {
+                currentCallId = call.id;
+                
+                // Получаем данные звонящего
+                const { data: caller } = await sb.from('profiles').select('*').eq('id', call.caller_id).single();
+                currentChatUser = caller;
+                
+                callChannel = sb.channel(`call:${currentCallId}`).on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'calls',
+                    filter: `id=eq.${currentCallId}`
+                }, handleCallUpdate).subscribe();
+                
+                showCallScreen(caller.display_name || caller.username, 'Входящий звонок...', true);
+            }
+        })
+        .subscribe();
 }
 
 async function initChat() {
@@ -818,7 +1125,7 @@ async function initChat() {
                     </div>
                 </div>
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="🔍 Поиск по имени или @username...">
+                    <input type="text" id="searchInput" placeholder="🔍 Поиск...">
                     <div id="searchResults" class="search-results"></div>
                 </div>
                 <div class="dialogs-list" id="usersList"></div>
@@ -842,12 +1149,15 @@ async function initChat() {
             </div>
         </div>
     `;
+    
     document.getElementById('myUserName').innerText = currentUser.display_name || currentUser.username;
     document.getElementById('logoutBtn').onclick = async () => { await sb.auth.signOut(); location.reload(); };
     document.getElementById('sendBtn').onclick = sendMessage;
     document.getElementById('messageInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
     document.getElementById('backBtn').addEventListener('click', goBackToDialogs);
-    document.getElementById('notifyBtn').onclick = enableNotifications;
+    document.getElementById('notifyBtn').onclick = () => {
+        Notification.requestPermission();
+    };
     
     const searchInput = document.getElementById('searchInput');
     let searchTimeout;
@@ -859,23 +1169,21 @@ async function initChat() {
         if (!searchInput.contains(e.target)) document.getElementById('searchResults').classList.remove('show');
     });
     
-    sb.channel('messages')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
-            const newMsg = payload.new;
-            if (currentChatId === newMsg.sender_id || currentChatId === newMsg.receiver_id) {
-                await loadMessages();
-            }
-            if (newMsg.sender_id !== currentUser.id) {
-                const sender = dialogsUsers.find(u => u.id === newMsg.sender_id) || allUsers.find(u => u.id === newMsg.sender_id);
-                if (sender) {
-                    showMessageNotification(sender.display_name || sender.username, newMsg.content, newMsg.sender_id);
-                }
-            }
-            await loadDialogs();
-        })
-        .subscribe();
+    // Подписка на сообщения
+    sb.channel('messages').on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages'
+    }, async (payload) => {
+        const newMsg = payload.new;
+        if (currentChatId === newMsg.sender_id || currentChatId === newMsg.receiver_id) {
+            await loadMessages();
+        }
+        await loadDialogs();
+    }).subscribe();
     
     await loadDialogs();
+    subscribeToIncomingCalls();
     showFeatureIntroIfNeeded();
 }
 
@@ -912,8 +1220,6 @@ document.querySelectorAll('.auth-tab').forEach(t => {
         document.getElementById('registerForm').classList.toggle('hidden', t.dataset.tab !== 'register');
     };
 });
-
-window.initiateCall = initiateCall;
 
 window.onload = async () => {
     const { data: { session } } = await sb.auth.getSession();
